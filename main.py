@@ -103,7 +103,7 @@ for d in delegations:
     receives = percentage * TOKEN_TO_DISTRIBUTE  # DYM receive, mul * 10**18
     print(f"{d.delegator_address} will receive {receives} DYM")
 
-    adym = receives * (10**18)
+    adym = receives * COIN_DECIMAL
 
     total += receives
     adym_total += adym
