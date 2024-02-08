@@ -76,6 +76,7 @@ def get_all_delegations() -> Tuple[int, list[StakingDelegation]]:
 
 
 total_shares, delegations = get_all_delegations()
+print(f"TOKEN_TO_DISTRIBUTE: {TOKEN_TO_DISTRIBUTE}")  # in adym
 print(f"Total shares: {total_shares}")  # in adym
 print(f"Total delegators: {len(delegations)}")
 
@@ -103,7 +104,7 @@ for d in delegations:
     receives = percentage * TOKEN_TO_DISTRIBUTE  # DYM receive, mul * 10**18
     print(f"{d.delegator_address} will receive {receives} DYM")
 
-    adym = receives * COIN_DECIMAL
+    adym = receives * (10**COIN_DECIMAL)
 
     total += receives
     adym_total += adym
