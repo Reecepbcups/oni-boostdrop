@@ -23,6 +23,13 @@ REST_API = "https://m-dymension.api.utsa.tech:443"  # cosmos.directory
 COIN_DECIMAL = 18  # 10**18, use 6 for standard cosmos
 DELEGATOR_LIMIT = 100_000  # Don't need to touch unless you max out somehow
 
+FEE_AMOUNT = 160000000000000000  # base of BASE_DENOM
+GAS = 8_000_000
+
+WALLET_BLACKLIST = ["dym1agupvk0ls0gumn42q96mjx9agaq2yc0vacg722"]
+
+# ---------------------
+
 
 class StakingDelegation:
     # cosmos/staking/v1beta1/validators/{VALIDATOR_ADDR}/delegations endpoint
@@ -59,12 +66,17 @@ def get_all_delegations() -> Tuple[int, list[StakingDelegation]]:
     res = httpx.get(url)
     for d in res.json()["delegation_responses"]:
 
+        delegator = delegator_address = d["delegation"]["delegator_address"]
+        if delegator in WALLET_BLACKLIST:
+            print(f"Blacklist: {delegator}")
+            continue
+
         amount = float(d["balance"]["amount"])
         total_shares += amount
 
         all_delegations.append(
             StakingDelegation(
-                delegator_address=d["delegation"]["delegator_address"],
+                delegator,
                 validator_address=d["delegation"]["validator_address"],
                 shares=d["delegation"]["shares"],
                 denom=d["balance"]["denom"],
@@ -91,7 +103,12 @@ MSG_FORMAT = {
     },
     "auth_info": {
         "signer_infos": [],
-        "fee": {"amount": [], "gas_limit": "200000", "payer": "", "granter": ""},
+        "fee": {
+            "amount": [{"amount": f"{FEE_AMOUNT}", "denom": "adym"}],
+            "gas_limit": f"{GAS}",
+            "payer": "",
+            "granter": "",
+        },
         "tip": None,
     },
     "signatures": [],
