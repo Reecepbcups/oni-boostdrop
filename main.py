@@ -26,7 +26,7 @@ DELEGATOR_LIMIT = 100_000  # Don't need to touch unless you max out somehow
 FEE_AMOUNT = 160000000000000000  # base of BASE_DENOM
 GAS = 8_000_000
 
-WALLET_BLACKLIST = ["dym1agupvk0ls0gumn42q96mjx9agaq2yc0vacg722"]
+WALLET_BLACKLIST = []
 
 # ---------------------
 
