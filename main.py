@@ -120,7 +120,6 @@ def get_all_delegations() -> Tuple[int, list[StakingDelegation]]:
             )
         )
 
-    print(f"Total boosted amount: {total_boosted_amount}")
     return total_shares, all_delegations
 
 
