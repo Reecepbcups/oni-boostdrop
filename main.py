@@ -28,7 +28,33 @@ GAS = 8_000_000
 
 WALLET_BLACKLIST = []
 
+BOOST_ENABLED = True
+BOOST_FACTORS = {
+    2000: 5,
+    1000: 3,
+    100: 1.5,
+    10: 1.2,
+    0: 1,  # 0-10 = standard booost
+}
+
 # ---------------------
+
+
+def get_boost_multiplier(shares: float) -> float:
+    if not BOOST_ENABLED:
+        return 1
+
+    shares = shares / (10**COIN_DECIMAL)
+
+    SORTED_BOOST = dict(
+        sorted(BOOST_FACTORS.items(), key=lambda item: item[0], reverse=True)
+    )
+
+    for k, v in SORTED_BOOST.items():
+        if shares >= k:
+            return v
+
+    return 1
 
 
 class StakingDelegation:
@@ -45,12 +71,14 @@ class StakingDelegation:
         shares: float,
         denom: str,
         amount: float,
+        boost_multiplier: float = 1,
     ):
         self.delegator_address = delegator_address
         self.validator_address = validator_address
         self.shares = float(shares)
         self.denom = denom
         self.amount = float(amount)
+        self.boost_multiplier = float(boost_multiplier)  # just for pretty printing
 
 
 def get_all_delegations() -> Tuple[int, list[StakingDelegation]]:
@@ -61,29 +89,38 @@ def get_all_delegations() -> Tuple[int, list[StakingDelegation]]:
     )
 
     total_shares = 0
+    total_boosted_amount = 0
 
     all_delegations = []
     res = httpx.get(url)
     for d in res.json()["delegation_responses"]:
 
-        delegator = delegator_address = d["delegation"]["delegator_address"]
+        delegator = d["delegation"]["delegator_address"]
         if delegator in WALLET_BLACKLIST:
             print(f"Blacklist: {delegator}")
             continue
 
-        amount = float(d["balance"]["amount"])
-        total_shares += amount
+        # multiplier is 1 if disabled
+        sharesAmt = float(d["balance"]["amount"])
+        multiplier = get_boost_multiplier(sharesAmt)
 
+        if multiplier > 1:
+            total_boosted_amount += sharesAmt * multiplier
+            sharesAmt *= multiplier
+
+        total_shares += sharesAmt
         all_delegations.append(
             StakingDelegation(
                 delegator,
                 validator_address=d["delegation"]["validator_address"],
                 shares=d["delegation"]["shares"],
                 denom=d["balance"]["denom"],
-                amount=d["balance"]["amount"],
+                amount=sharesAmt,
+                boost_multiplier=multiplier,
             )
         )
 
+    print(f"Total boosted amount: {total_boosted_amount}")
     return total_shares, all_delegations
 
 
@@ -119,7 +156,9 @@ adym_total = 0
 for d in delegations:
     percentage = d.amount / total_shares
     receives = percentage * TOKEN_TO_DISTRIBUTE  # DYM receive, mul * 10**18
-    print(f"{d.delegator_address} will receive {receives} DYM")
+    print(
+        f"{d.delegator_address} receives {receives} TOKEN(S) (boost x{d.boost_multiplier:.2f})"
+    )
 
     adym = receives * (10**COIN_DECIMAL)
 
