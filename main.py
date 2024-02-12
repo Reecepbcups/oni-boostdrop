@@ -28,6 +28,8 @@ GAS = 8_000_000
 
 WALLET_BLACKLIST = []
 
+MINIMUM_STAKE_AMOUNT = 0.1  # 0.1DYM
+
 BOOST_ENABLED = True
 BOOST_FACTORS = {
     2000: 5,
@@ -102,6 +104,13 @@ def get_all_delegations() -> Tuple[int, list[StakingDelegation]]:
 
         # multiplier is 1 if disabled
         sharesAmt = float(d["balance"]["amount"])
+
+        if sharesAmt < MINIMUM_STAKE_AMOUNT * (10**COIN_DECIMAL):
+            print(
+                f"{delegator} does not meet the minimum stake amount of {MINIMUM_STAKE_AMOUNT}"
+            )
+            continue
+
         multiplier = get_boost_multiplier(sharesAmt)
 
         if multiplier > 1:
