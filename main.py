@@ -164,6 +164,9 @@ for d in delegations:
     total += receives
     adym_total += adym
 
+    if adym == 0:
+        continue
+
     MSG_FORMAT["body"]["messages"].append(
         {
             "@type": "/cosmos.bank.v1beta1.MsgSend",
@@ -173,7 +176,7 @@ for d in delegations:
         }
     )
 
-print(f"Total DYM to distribute: {total}")
+print(f"Total TOKENS to distribute: {total}")
 
 print(
     f"{total} ({adym_total} {BASE_DENOM}) will be distributed to {len(delegations)} delegators"
